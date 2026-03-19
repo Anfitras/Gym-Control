@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Professores – GymControl</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+<div class="app-layout">
+  <aside class="sidebar" id="sidebar"></aside>
+  <div class="main-content">
+    <header class="topbar">
+      <div class="topbar-left">
+        <span class="page-title" id="page-title">Professores</span>
+      </div>
+      <div class="topbar-right">
+        <span class="topbar-date" id="topbar-date"></span>
+      </div>
+    </header>
+    <main class="page-content">
+
+      <div class="page-header">
+        <div>
+          <h2>Gerenciar Professores</h2>
+          <p class="subtitle">Cadastre e acompanhe os professores da academia</p>
+        </div>
+        <button class="btn btn-primary" onclick="abrirModalNovoProfessor()">
+          ➕ Novo Professor
+        </button>
+      </div>
+
+      <div class="search-bar">
+        <div class="search-input-wrap">
+          <span class="search-icon">🔍</span>
+          <input type="text" id="busca-prof" placeholder="Buscar professor..." />
+        </div>
+        <select class="form-control" id="filtro-especialidade-prof" style="max-width:200px">
+          <option value="">Todas as especialidades</option>
+          <option>Musculação</option>
+          <option>Funcional</option>
+          <option>Spinning</option>
+          <option>Zumba</option>
+          <option>Pilates</option>
+          <option>Avaliação Física</option>
+        </select>
+      </div>
+
+      <!-- CARDS — preenchidos via GET /api/professores -->
+      <div id="grid-professores"
+           style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:20px;margin-bottom:28px">
+        <div style="color:var(--gray-500);font-size:13px;padding:8px">
+          Nenhum professor cadastrado.
+        </div>
+      </div>
+
+      <!-- TABELA RESUMO — preenchida via GET /api/professores -->
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title">Resumo de Professores</span>
+        </div>
+        <div class="table-wrap">
+          <table id="tabela-prof">
+            <thead>
+              <tr>
+                <th>Código</th>
+                <th>Nome</th>
+                <th>Especialidade</th>
+                <th>Horário</th>
+                <th>Status</th>
+                <th>Ações</th>
+              </tr>
+            </thead>
+            <tbody id="lista-professores">
+              <tr>
+                <td colspan="6" style="text-align:center;color:var(--gray-500);padding:32px">
+                  Nenhum professor cadastrado. Clique em <strong>➕ Novo Professor</strong> para começar.
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </main>
+  </div>
+</div>
+
+<!-- MODAL PROFESSOR -->
+<div class="modal-overlay" id="modal-prof">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title" id="modal-prof-titulo">➕ Cadastrar Professor</span>
+      <button class="modal-close" onclick="closeModal('modal-prof')">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="prof-id" value="" />
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Código</label>
+          <input type="text" id="prof-codigo" class="form-control" readonly
+                 style="background:var(--gray-50)" placeholder="Gerado automaticamente" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Status</label>
+          <select id="prof-status" name="status" class="form-control">
+            <option value="1">Ativo</option>
+            <option value="0">Inativo</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Nome Completo *</label>
+        <input type="text" id="prof-nome" name="nome"
+               class="form-control" placeholder="Nome do professor" />
+      </div>
+      <div class="form-group">
+        <label class="form-label">CPF</label>
+        <input type="text" id="prof-cpf" name="cpf"
+               class="form-control" placeholder="000.000.000-00" />
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Especialidade *</label>
+          <select id="prof-especialidade" name="especialidade" class="form-control">
+            <option value="Musculação">Musculação</option>
+            <option value="Funcional">Funcional</option>
+            <option value="Spinning">Spinning</option>
+            <option value="Zumba / Dança">Zumba / Dança</option>
+            <option value="Avaliação Física">Avaliação Física</option>
+            <option value="Pilates">Pilates</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Telefone</label>
+          <input type="text" id="prof-telefone" name="telefone"
+                 class="form-control" placeholder="(00) 00000-0000" />
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">E-mail</label>
+        <input type="email" id="prof-email" name="email"
+               class="form-control" placeholder="email@gymcontrol.com" />
+      </div>
+      <div class="form-group">
+        <label class="form-label">Horário Disponível</label>
+        <input type="text" id="prof-horario" name="horario_disponivel"
+               class="form-control" placeholder="Ex: Seg-Sex 07:00 às 18:00" />
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('modal-prof')">Cancelar</button>
+      <button class="btn btn-primary" onclick="salvarProfessor()">💾 Salvar</button>
+    </div>
+  </div>
+</div>
+
+<script src="gymcontrol.js"></script>
+<script>
+  buildSidebar('professores');
+  buildTopbar('Professores');
+  carregarProfessores();
+
+  const buscaProf = document.getElementById('busca-prof');
+  if (buscaProf) buscaProf.addEventListener('input', filtrarProfessores);
+
+  const filtroEspecialidade = document.getElementById('filtro-especialidade-prof');
+  if (filtroEspecialidade) filtroEspecialidade.addEventListener('change', filtrarProfessores);
+</script>
+</body>
+</html>

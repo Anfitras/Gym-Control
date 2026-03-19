@@ -1,0 +1,266 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Agenda – GymControl</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <div class="app-layout">
+      <aside class="sidebar" id="sidebar"></aside>
+
+      <div class="main-content">
+        <header class="topbar">
+          <div class="topbar-left">
+            <span class="page-title" id="page-title">Agenda</span>
+          </div>
+          <div class="topbar-right">
+            <span class="topbar-date" id="topbar-date"></span>
+          </div>
+        </header>
+
+        <main class="page-content">
+          <div class="page-header">
+            <div>
+              <h2>Agenda de Aulas</h2>
+              <p class="subtitle">
+                Gerencie os horários e atividades dos professores
+              </p>
+            </div>
+            <button class="btn btn-primary" onclick="abrirModalNovaAula()">
+              ➕ Nova Aula
+            </button>
+          </div>
+
+          <div class="search-bar">
+            <div class="search-input-wrap">
+              <span class="search-icon">🔍</span>
+              <input
+                type="text"
+                id="busca-agenda"
+                placeholder="Buscar por atividade, professor ou turma..."
+              />
+            </div>
+            <select
+              class="form-control"
+              id="filtro-agenda-prof"
+              style="max-width: 220px"
+            >
+              <option value="">Todos os professores</option>
+            </select>
+            <select
+              class="form-control"
+              id="filtro-agenda-status"
+              style="max-width: 160px"
+            >
+              <option value="">Todos</option>
+              <option value="0">Pendentes</option>
+              <option value="1">Realizadas</option>
+            </select>
+          </div>
+
+          <div class="stats-grid" style="margin-bottom: 24px">
+            <div class="stat-card">
+              <div class="stat-icon blue">📅</div>
+              <div class="stat-info">
+                <div class="label">Total de Aulas</div>
+                <div class="value" id="stat-total-aulas">—</div>
+                <div class="change">agendadas</div>
+              </div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-icon green">✅</div>
+              <div class="stat-info">
+                <div class="label">Aulas Realizadas</div>
+                <div class="value" id="stat-realizadas">—</div>
+                <div class="change">concluídas</div>
+              </div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-icon orange">⏳</div>
+              <div class="stat-info">
+                <div class="label">Aulas Pendentes</div>
+                <div class="value" id="stat-pendentes">—</div>
+                <div class="change">aguardando</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- CARDS -->
+          <div
+            id="grid-agenda"
+            style="
+              display: grid;
+              grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+              gap: 16px;
+              margin-bottom: 28px;
+            "
+          >
+            <div style="color: var(--gray-500); font-size: 13px; padding: 8px">
+              Nenhuma aula agendada.
+            </div>
+          </div>
+
+          <!-- TABELA -->
+          <div class="card">
+            <div class="card-header">
+              <span class="card-title">📋 Todas as Aulas</span>
+              <span style="font-size: 13px; color: var(--gray-500)">
+                Total: <strong id="total-agenda">0 aulas</strong>
+              </span>
+            </div>
+            <div class="table-wrap">
+              <table id="tabela-agenda">
+                <thead>
+                  <tr>
+                    <th>ID</th>
+                    <th>Atividade</th>
+                    <th>Professor</th>
+                    <th>Turma</th>
+                    <th>Data</th>
+                    <th>Início</th>
+                    <th>Fim</th>
+                    <th>Situação</th>
+                    <th>Ações</th>
+                  </tr>
+                </thead>
+                <tbody id="lista-agenda">
+                  <tr>
+                    <td
+                      colspan="9"
+                      style="
+                        text-align: center;
+                        color: var(--gray-500);
+                        padding: 32px;
+                      "
+                    >
+                      Nenhuma aula agendada. Clique em
+                      <strong>➕ Nova Aula</strong> para começar.
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </main>
+      </div>
+    </div>
+
+    <!-- MODAL NOVA / EDITAR AULA -->
+    <div class="modal-overlay" id="modal-aula">
+      <div class="modal">
+        <div class="modal-header">
+          <span class="modal-title" id="modal-aula-titulo"
+            >➕ Agendar Nova Aula</span
+          >
+          <button class="modal-close" onclick="closeModal('modal-aula')">
+            ✕
+          </button>
+        </div>
+        <div class="modal-body">
+          <input type="hidden" id="aula-id" value="" />
+
+          <div class="form-group">
+            <label class="form-label">Atividade *</label>
+            <input
+              type="text"
+              id="aula-atividade"
+              class="form-control"
+              placeholder="Ex: Musculação, Spinning, Zumba..."
+            />
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Professor *</label>
+              <select id="aula-professor" class="form-control">
+                <option value="0">Selecionar professor...</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Turma *</label>
+              <select id="aula-turma" class="form-control">
+                <option value="0">Selecionar turma...</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Data *</label>
+              <input
+                type="text"
+                id="aula-data"
+                class="form-control"
+                placeholder="DD/MM/AAAA"
+                maxlength="10"
+              />
+            </div>
+            <div class="form-group">
+              <label class="form-label">Hora Início *</label>
+              <input
+                type="text"
+                id="aula-inicio"
+                class="form-control"
+                placeholder="HH:MM"
+                maxlength="5"
+              />
+            </div>
+            <div class="form-group">
+              <label class="form-label">Hora Fim</label>
+              <input
+                type="text"
+                id="aula-fim"
+                class="form-control"
+                placeholder="HH:MM"
+                maxlength="5"
+              />
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Observação</label>
+            <textarea
+              id="aula-obs"
+              class="form-control"
+              rows="2"
+              placeholder="Observações adicionais..."
+            ></textarea>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Situação</label>
+            <select id="aula-realizada" class="form-control">
+              <option value="0">Pendente</option>
+              <option value="1">Realizada</option>
+            </select>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-outline" onclick="closeModal('modal-aula')">
+            Cancelar
+          </button>
+          <button class="btn btn-primary" onclick="salvarAula()">
+            💾 Salvar Aula
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <script src="gymcontrol.js"></script>
+    <script>
+      buildSidebar("agenda");
+      buildTopbar("Agenda");
+      carregarAgenda();
+
+      const buscaAgenda = document.getElementById("busca-agenda");
+      const filtroProf = document.getElementById("filtro-agenda-prof");
+      const filtroStatus = document.getElementById("filtro-agenda-status");
+
+      if (buscaAgenda) buscaAgenda.addEventListener("input", filtrarAgenda);
+      if (filtroProf) filtroProf.addEventListener("change", filtrarAgenda);
+      if (filtroStatus) filtroStatus.addEventListener("change", filtrarAgenda);
+    </script>
+  </body>
+</html>

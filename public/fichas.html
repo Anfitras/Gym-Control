@@ -1,0 +1,213 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Fichas de Treino - GymControl</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <div class="app-layout">
+      <aside class="sidebar" id="sidebar"></aside>
+
+      <div class="main-content">
+        <header class="topbar">
+          <div class="topbar-left">
+            <span class="page-title" id="page-title">Fichas de Treino</span>
+          </div>
+          <div class="topbar-right">
+            <span class="topbar-date" id="topbar-date"></span>
+          </div>
+        </header>
+
+        <main class="page-content">
+          <div class="page-header">
+            <div>
+              <h2>Fichas de Treino</h2>
+              <p class="subtitle">
+                Crie e gerencie fichas de treino personalizadas por aluno
+              </p>
+            </div>
+            <button class="btn btn-primary" onclick="abrirModalNovaFicha()">
+              📝 Nova Ficha
+            </button>
+          </div>
+
+          <div class="search-bar">
+            <div class="search-input-wrap">
+              <span class="search-icon">🔍</span>
+              <input
+                type="text"
+                id="busca-fichas"
+                placeholder="Buscar ficha por aluno..."
+              />
+            </div>
+            <select
+              class="form-control"
+              id="filtro-objetivo"
+              style="max-width: 200px"
+            >
+              <option value="">Todos os objetivos</option>
+              <option>Hipertrofia</option>
+              <option>Emagrecimento</option>
+              <option>Condicionamento</option>
+              <option>Reabilitacao</option>
+            </select>
+          </div>
+
+          <!-- CARDS -->
+          <div
+            id="grid-fichas-cards"
+            style="
+              display: grid;
+              grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+              gap: 20px;
+              margin-bottom: 28px;
+            "
+          >
+            <div style="color: var(--gray-500); font-size: 13px; padding: 8px">
+              Nenhuma ficha cadastrada.
+            </div>
+          </div>
+
+          <!-- TABELA -->
+          <div class="card">
+            <div class="card-header">
+              <span class="card-title">Resumo de Fichas</span>
+            </div>
+            <div class="table-wrap">
+              <table id="tabela-fichas">
+                <thead>
+                  <tr>
+                    <th>Código</th>
+                    <th>Aluno</th>
+                    <th>Professor</th>
+                    <th>Objetivo</th>
+                    <th>Exercícios</th>
+                    <th>Data</th>
+                    <th>Ações</th>
+                  </tr>
+                </thead>
+                <tbody id="lista-fichas">
+                  <tr>
+                    <td
+                      colspan="7"
+                      style="
+                        text-align: center;
+                        color: var(--gray-500);
+                        padding: 32px;
+                      "
+                    >
+                      Nenhuma ficha cadastrada. Clique em
+                      <strong>📝 Nova Ficha</strong> para começar.
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </main>
+      </div>
+    </div>
+
+    <!-- MODAL NOVA FICHA -->
+    <div class="modal-overlay" id="modal-ficha">
+      <div class="modal" style="max-width: 700px">
+        <div class="modal-header">
+          <span class="modal-title">📝 Nova Ficha de Treino</span>
+          <button class="modal-close" onclick="closeModal('modal-ficha')">
+            ✕
+          </button>
+        </div>
+        <div class="modal-body">
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Aluno *</label>
+              <select id="ficha-aluno" class="form-control">
+                <option value="0">Selecionar aluno...</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Professor Responsável *</label>
+              <select id="ficha-professor" class="form-control">
+                <option value="0">Selecionar professor...</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Objetivo do Treino *</label>
+            <select id="ficha-objetivo-modal" class="form-control">
+              <option value="1">Hipertrofia</option>
+              <option value="2">Emagrecimento</option>
+              <option value="3">Condicionamento Físico</option>
+              <option value="4">Reabilitação</option>
+            </select>
+          </div>
+
+          <!-- Exercícios gerados dinamicamente pelo JS -->
+          <div id="exercicios-container"></div>
+
+          <button
+            class="btn btn-outline btn-sm"
+            onclick="adicionarCampoExercicio()"
+            style="margin-bottom: 16px"
+          >
+            ➕ Adicionar Exercício
+          </button>
+
+          <div class="form-group">
+            <label class="form-label">Observações Gerais</label>
+            <textarea
+              id="ficha-obs"
+              class="form-control"
+              rows="2"
+              placeholder="Orientações adicionais..."
+            ></textarea>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-outline" onclick="closeModal('modal-ficha')">
+            Cancelar
+          </button>
+          <button class="btn btn-primary" onclick="salvarFicha()">
+            💾 Salvar Ficha
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- MODAL VER FICHA -->
+    <div class="modal-overlay" id="modal-ver-ficha">
+      <div class="modal" style="max-width: 580px">
+        <div class="modal-header">
+          <span class="modal-title" id="modal-ver-ficha-titulo"
+            >📝 Ficha de Treino</span
+          >
+          <button class="modal-close" onclick="closeModal('modal-ver-ficha')">
+            ✕
+          </button>
+        </div>
+        <div
+          class="modal-body"
+          id="modal-ver-ficha-body"
+          style="padding: 0"
+        ></div>
+        <div class="modal-footer">
+          <button
+            class="btn btn-outline"
+            onclick="closeModal('modal-ver-ficha')"
+          >
+            Fechar
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <script src="gymcontrol.js"></script>
+    <script>
+      buildSidebar("fichas");
+      buildTopbar("Fichas de Treino");
+      carregarFichas();
+    </script>
+  </body>
+</html>

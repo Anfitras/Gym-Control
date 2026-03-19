@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Controle de Turmas – GymControl</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+<div class="app-layout">
+  <aside class="sidebar" id="sidebar"></aside>
+  <div class="main-content">
+    <header class="topbar">
+      <div class="topbar-left">
+        <span class="page-title" id="page-title">Controle de Turmas</span>
+      </div>
+      <div class="topbar-right">
+        <span class="topbar-date" id="topbar-date"></span>
+      </div>
+    </header>
+    <main class="page-content">
+
+      <div class="page-header">
+        <div>
+          <h2>Controle de Turmas</h2>
+          <p class="subtitle">Vincule alunos às turmas e controle a capacidade</p>
+        </div>
+        <button class="btn btn-primary" onclick="abrirModalVincular()">
+          🔗 Vincular Aluno à Turma
+        </button>
+      </div>
+
+      <!-- ALERTA dinâmico para turmas quase cheias -->
+      <div id="alerta-turmas-cheias"></div>
+
+      <!-- GRID DE TURMAS COM ALUNOS — preenchido via GET /api/turmas + /api/alunos -->
+      <div id="grid-controle-turmas"
+           style="display:grid;grid-template-columns:1fr 1fr;gap:24px">
+        <div style="color:var(--gray-500);font-size:13px;padding:8px">
+          Nenhuma turma cadastrada. Acesse <a href="turmas.html" style="color:var(--blue-500)">Turmas</a> para criar.
+        </div>
+      </div>
+
+    </main>
+  </div>
+</div>
+
+<!-- MODAL VINCULAR ALUNO -->
+<div class="modal-overlay" id="modal-vincular">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title">🔗 Vincular Aluno à Turma</span>
+      <button class="modal-close" onclick="closeModal('modal-vincular')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="alert alert-info">
+        ℹ️ Selecione o aluno e a turma desejada. O sistema verificará automaticamente se há vagas disponíveis.
+      </div>
+      <div class="form-group">
+        <label class="form-label">Selecionar Aluno *</label>
+        <select id="vincular-aluno" name="id_aluno" class="form-control">
+          <option value="">Selecione o aluno...</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Selecionar Turma *</label>
+        <select id="vincular-turma" name="id_turma" class="form-control"
+                onchange="verificarVagasControle(this)">
+          <option value="">Selecione a turma...</option>
+        </select>
+      </div>
+      <div id="aviso-vagas"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('modal-vincular')">Cancelar</button>
+      <button class="btn btn-primary" onclick="vincularAluno()">✅ Confirmar Vínculo</button>
+    </div>
+  </div>
+</div>
+
+<script src="gymcontrol.js"></script>
+<script>
+  buildSidebar('controle');
+  buildTopbar('Controle de Turmas');
+  carregarControle();
+</script>
+</body>
+</html>

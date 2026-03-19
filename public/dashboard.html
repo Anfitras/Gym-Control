@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dashboard – GymControl</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+<div class="app-layout">
+  <aside class="sidebar" id="sidebar"></aside>
+  <div class="main-content">
+    <header class="topbar">
+      <div class="topbar-left">
+        <span class="page-title" id="page-title">Dashboard</span>
+      </div>
+      <div class="topbar-right">
+        <span class="topbar-date" id="topbar-date"></span>
+      </div>
+    </header>
+    <main class="page-content">
+
+      <!-- STATS — valores via GET /api/dashboard -->
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-icon blue">👥</div>
+          <div class="stat-info">
+            <div class="label">Total de Alunos</div>
+            <div class="value" data-stat="total_alunos">—</div>
+            <div class="change">cadastrados no sistema</div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon green">🎓</div>
+          <div class="stat-info">
+            <div class="label">Professores Ativos</div>
+            <div class="value" data-stat="total_professores">—</div>
+            <div class="change">cadastrados no sistema</div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon orange">📋</div>
+          <div class="stat-info">
+            <div class="label">Turmas Cadastradas</div>
+            <div class="value" data-stat="total_turmas">—</div>
+            <div class="change">cadastradas no sistema</div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon purple">📝</div>
+          <div class="stat-info">
+            <div class="label">Fichas de Treino</div>
+            <div class="value" data-stat="total_fichas">—</div>
+            <div class="change">cadastradas no sistema</div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon sky">📅</div>
+          <div class="stat-info">
+            <div class="label">Aulas na Agenda</div>
+            <div class="value" data-stat="total_agenda">—</div>
+            <div class="change">agendadas no sistema</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- GRID 2 COLUNAS -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-bottom:24px;">
+
+        <!-- Próximas atividades — via GET /api/agenda -->
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">📅 Próximas Atividades</span>
+            <a href="agenda.html" class="btn btn-outline btn-sm">Ver agenda</a>
+          </div>
+          <div class="card-body" style="padding:0">
+            <table>
+              <thead>
+                <tr>
+                  <th>Professor</th>
+                  <th>Atividade</th>
+                  <th>Horário</th>
+                  <th>Turma</th>
+                </tr>
+              </thead>
+              <tbody id="tbody-agenda-hoje">
+                <tr><td colspan="4" style="text-align:center;color:var(--gray-500);padding:20px">Nenhuma atividade cadastrada</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Alunos recentes — via GET /api/alunos -->
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">👥 Alunos Recentes</span>
+            <a href="alunos.html" class="btn btn-outline btn-sm">Ver todos</a>
+          </div>
+          <div class="card-body" style="padding:0">
+            <table>
+              <thead>
+                <tr>
+                  <th>Nome</th>
+                  <th>Turma</th>
+                  <th>Matrícula</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody id="tbody-alunos-recentes">
+                <tr><td colspan="4" style="text-align:center;color:var(--gray-500);padding:20px">Nenhum aluno cadastrado</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- OCUPAÇÃO DAS TURMAS — via GET /api/turmas -->
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title">📋 Ocupação das Turmas</span>
+          <a href="turmas.html" class="btn btn-outline btn-sm">Gerenciar turmas</a>
+        </div>
+        <div class="card-body">
+          <div id="grid-turmas" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:16px;">
+            <div style="color:var(--gray-500);font-size:13px;padding:8px">Nenhuma turma cadastrada</div>
+          </div>
+        </div>
+      </div>
+
+    </main>
+  </div>
+</div>
+<script src="gymcontrol.js"></script>
+<script>
+  buildSidebar('dashboard');
+  buildTopbar('Dashboard');
+  carregarDashboard();
+</script>
+</body>
+</html>

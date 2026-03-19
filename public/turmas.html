@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Turmas – GymControl</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+<div class="app-layout">
+  <aside class="sidebar" id="sidebar"></aside>
+  <div class="main-content">
+    <header class="topbar">
+      <div class="topbar-left">
+        <span class="page-title" id="page-title">Turmas</span>
+      </div>
+      <div class="topbar-right">
+        <span class="topbar-date" id="topbar-date"></span>
+      </div>
+    </header>
+    <main class="page-content">
+
+      <div class="page-header">
+        <div>
+          <h2>Gerenciar Turmas</h2>
+          <p class="subtitle">Cadastre turmas e controle a ocupação de vagas</p>
+        </div>
+        <button class="btn btn-primary" onclick="abrirModalNovaTurma()">
+          ➕ Nova Turma
+        </button>
+      </div>
+
+      <div class="search-bar">
+        <div class="search-input-wrap">
+          <span class="search-icon">🔍</span>
+          <input type="text" id="busca-turmas" placeholder="Buscar turma..." />
+        </div>
+        <select class="form-control" style="max-width:180px">
+          <option value="">Todas as modalidades</option>
+          <option>Musculação</option>
+          <option>Funcional</option>
+          <option>Spinning</option>
+          <option>Zumba</option>
+          <option>Pilates</option>
+        </select>
+      </div>
+
+      <!-- CARDS — preenchidos via GET /api/turmas -->
+      <div id="grid-turmas-cards"
+           style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:20px;margin-bottom:28px">
+        <div style="color:var(--gray-500);font-size:13px;padding:8px">
+          Nenhuma turma cadastrada.
+        </div>
+      </div>
+
+      <!-- TABELA — preenchida via GET /api/turmas -->
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title">Tabela de Turmas</span>
+        </div>
+        <div class="table-wrap">
+          <table id="tabela-turmas">
+            <thead>
+              <tr>
+                <th>Código</th>
+                <th>Nome da Turma</th>
+                <th>Modalidade</th>
+                <th>Professor</th>
+                <th>Horário</th>
+                <th>Vagas</th>
+                <th>Ocupação</th>
+                <th>Status</th>
+                <th>Ações</th>
+              </tr>
+            </thead>
+            <tbody id="lista-turmas">
+              <tr>
+                <td colspan="9" style="text-align:center;color:var(--gray-500);padding:32px">
+                  Nenhuma turma cadastrada. Clique em <strong>➕ Nova Turma</strong> para começar.
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </main>
+  </div>
+</div>
+
+<!-- MODAL NOVA / EDITAR TURMA -->
+<div class="modal-overlay" id="modal-turma">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title" id="modal-turma-titulo">➕ Cadastrar Turma</span>
+      <button class="modal-close" onclick="closeModal('modal-turma')">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="turma-id" value="" />
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Código</label>
+          <input type="text" id="turma-codigo" class="form-control" readonly
+                 style="background:var(--gray-50)" placeholder="Gerado automaticamente" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Status</label>
+          <select id="turma-status" name="status" class="form-control">
+            <option value="1">Ativa</option>
+            <option value="0">Inativa</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Nome da Turma *</label>
+        <input type="text" id="turma-nome" name="nome"
+               class="form-control" placeholder="Ex: Musculação C" />
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Modalidade *</label>
+          <select id="turma-modalidade" name="modalidade" class="form-control">
+            <option value="Musculação">Musculação</option>
+            <option value="Funcional">Funcional</option>
+            <option value="Spinning">Spinning</option>
+            <option value="Zumba">Zumba</option>
+            <option value="Pilates">Pilates</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Professor Responsável *</label>
+          <select id="turma-professor" name="id_professor" class="form-control">
+            <option value="0">Selecionar professor...</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Horário</label>
+          <input type="text" id="turma-horario" name="horario"
+                 class="form-control" placeholder="Ex: 07:00" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Dias da Semana</label>
+          <input type="text" id="turma-dias" name="dias_semana"
+                 class="form-control" placeholder="Ex: Seg-Qua-Sex" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Capacidade Máxima</label>
+          <input type="number" id="turma-capacidade" name="capacidade_max"
+                 class="form-control" placeholder="Ex: 30" min="1" />
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('modal-turma')">Cancelar</button>
+      <button class="btn btn-primary" onclick="salvarTurma()">💾 Salvar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL VER ALUNOS DA TURMA -->
+<div class="modal-overlay" id="modal-ver-turma">
+  <div class="modal" style="max-width:720px">
+    <div class="modal-header">
+      <span class="modal-title" id="modal-ver-turma-titulo">👥 Alunos da Turma</span>
+      <button class="modal-close" onclick="closeModal('modal-ver-turma')">✕</button>
+    </div>
+    <div class="modal-body" style="padding:0">
+      <table>
+        <thead>
+          <tr><th>#</th><th>Nome</th><th>Telefone</th><th>Matrícula</th><th>Status</th></tr>
+        </thead>
+        <tbody id="lista-alunos-turma">
+          <tr><td colspan="5" style="text-align:center;color:var(--gray-500);padding:20px">Nenhum aluno nesta turma</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('modal-ver-turma')">Fechar</button>
+    </div>
+  </div>
+</div>
+
+<script src="gymcontrol.js"></script>
+<script>
+  buildSidebar('turmas');
+  buildTopbar('Turmas');
+  carregarTurmas();
+  filterTable('busca-turmas', 'tabela-turmas');
+</script>
+</body>
+</html>

@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>GymControl – Login</title>
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    body { min-height: 100vh; background: var(--gray-50); display: flex; align-items: center; justify-content: center; padding: 20px; }
+
+    .login-wrapper {
+      display: flex;
+      width: 900px;
+      max-width: 100%;
+      min-height: 540px;
+      border-radius: 20px;
+      overflow: hidden;
+      box-shadow: 0 20px 60px rgba(10,22,40,.25);
+    }
+
+    /* PAINEL ESQUERDO */
+    .login-left {
+      background: linear-gradient(145deg, var(--blue-900) 0%, var(--blue-700) 60%, var(--blue-500) 100%);
+      width: 42%;
+      padding: 52px 44px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      position: relative;
+      overflow: hidden;
+    }
+    .login-left::before {
+      content: '';
+      position: absolute;
+      width: 300px; height: 300px;
+      border-radius: 50%;
+      background: rgba(255,255,255,.04);
+      top: -80px; right: -80px;
+    }
+    .login-left::after {
+      content: '';
+      position: absolute;
+      width: 200px; height: 200px;
+      border-radius: 50%;
+      background: rgba(255,255,255,.04);
+      bottom: 40px; left: -60px;
+    }
+
+    .brand {
+      position: relative; z-index: 1;
+    }
+    .brand-icon {
+      width: 48px; height: 48px;
+      background: rgba(255,255,255,.15);
+      border-radius: 13px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 24px;
+      margin-bottom: 16px;
+    }
+    .brand-name {
+      font-family: 'Sora', sans-serif;
+      font-size: 28px;
+      font-weight: 700;
+      color: white;
+      line-height: 1.1;
+    }
+    .brand-sub {
+      font-size: 12.5px;
+      color: rgba(255,255,255,.55);
+      margin-top: 6px;
+      letter-spacing: .06em;
+      text-transform: uppercase;
+    }
+
+    .login-left-body {
+      position: relative; z-index: 1;
+    }
+    .login-left-body h2 {
+      font-family: 'Sora', sans-serif;
+      font-size: 22px;
+      font-weight: 600;
+      color: white;
+      line-height: 1.4;
+      margin-bottom: 12px;
+    }
+    .login-left-body p {
+      font-size: 13.5px;
+      color: rgba(255,255,255,.55);
+      line-height: 1.6;
+    }
+
+    .login-features {
+      position: relative; z-index: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .feature-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 13px;
+      color: rgba(255,255,255,.7);
+    }
+    .feature-dot {
+      width: 7px; height: 7px;
+      border-radius: 50%;
+      background: var(--accent);
+      flex-shrink: 0;
+    }
+
+    /* PAINEL DIREITO */
+    .login-right {
+      flex: 1;
+      background: var(--white);
+      padding: 52px 48px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+    .login-right h3 {
+      font-family: 'Sora', sans-serif;
+      font-size: 22px;
+      font-weight: 600;
+      margin-bottom: 6px;
+    }
+    .login-right .welcome-sub {
+      font-size: 13.5px;
+      color: var(--gray-500);
+      margin-bottom: 32px;
+    }
+
+    .login-form .form-group { margin-bottom: 20px; }
+    .login-form .form-control {
+      padding: 12px 16px;
+      font-size: 14.5px;
+    }
+
+    .form-options {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 24px;
+      font-size: 13px;
+    }
+    .form-options a { color: var(--blue-500); }
+    .form-options a:hover { text-decoration: underline; }
+    .remember { display: flex; align-items: center; gap: 7px; color: var(--gray-500); }
+    .remember input { accent-color: var(--blue-500); }
+
+    .btn-login {
+      width: 100%;
+      padding: 13px;
+      background: var(--blue-500);
+      color: white;
+      border-radius: var(--radius);
+      font-family: 'Sora', sans-serif;
+      font-size: 15px;
+      font-weight: 600;
+      letter-spacing: .02em;
+      transition: var(--transition);
+      border: none;
+      cursor: pointer;
+    }
+    .btn-login:hover { background: var(--blue-400); transform: translateY(-1px); box-shadow: 0 6px 20px rgba(37,99,235,.3); }
+
+    .login-demo {
+      margin-top: 20px;
+      padding: 12px 16px;
+      background: var(--blue-50);
+      border-radius: var(--radius);
+      border: 1px dashed var(--blue-300);
+      font-size: 12.5px;
+      color: var(--blue-700);
+      text-align: center;
+    }
+    .login-demo strong { display: block; margin-bottom: 4px; }
+
+    @media (max-width: 680px) {
+      .login-left { display: none; }
+      .login-right { padding: 36px 28px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="login-wrapper">
+    <!-- LADO ESQUERDO -->
+    <div class="login-left">
+      <div class="brand">
+        <div class="brand-icon">🏋️</div>
+        <div class="brand-name">GymControl</div>
+        <div class="brand-sub">Sistema de Gerenciamento</div>
+      </div>
+
+      <div class="login-left-body">
+        <h2>Controle total da sua academia em um só lugar</h2>
+        <p>Gerencie alunos, turmas, fichas de treino e a agenda dos professores com praticidade e eficiência.</p>
+      </div>
+
+      <div class="login-features">
+        <div class="feature-item"><div class="feature-dot"></div> Cadastro completo de alunos</div>
+        <div class="feature-item"><div class="feature-dot"></div> Fichas de treino personalizadas</div>
+        <div class="feature-item"><div class="feature-dot"></div> Controle de turmas e vagas</div>
+        <div class="feature-item"><div class="feature-dot"></div> Agenda dos professores</div>
+      </div>
+    </div>
+
+    <!-- LADO DIREITO -->
+    <div class="login-right">
+      <h3>Bem-vindo de volta 👋</h3>
+      <p class="welcome-sub">Faça login para acessar o painel administrativo</p>
+
+      <div class="login-form">
+        <div class="form-group">
+          <label class="form-label">Usuário</label>
+          <input type="text" class="form-control" placeholder="Digite seu usuário" value="admin" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Senha</label>
+          <input type="password" class="form-control" placeholder="Digite sua senha" value="••••••" />
+        </div>
+
+        <div class="form-options">
+          <label class="remember">
+            <input type="checkbox" checked /> Lembrar acesso
+          </label>
+          <a href="#">Esqueci a senha</a>
+        </div>
+
+        <a href="dashboard.html">
+          <button class="btn-login">Entrar no sistema</button>
+        </a>
+
+       
+      </div>
+    </div>
+  </div>
+</body>
+</html>
