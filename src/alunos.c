@@ -149,6 +149,9 @@ int aluno_editar(int id, Aluno *novo)
    ---------------------------------------------------------------- */
 int aluno_excluir(int id)
 {
+    /* Remove também todos os vínculos aluno-turma */
+    aluno_turma_remover_tudo_aluno(id);
+
     FILE *fp = fopen(ARQ_ALUNOS, "rb");
     FILE *tmp = fopen("data/alunos_tmp.dat", "wb");
     if (!fp || !tmp)

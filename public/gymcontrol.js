@@ -129,6 +129,45 @@ async function _carregarCaches() {
   window._cacheTurmas      = turmas || [];
 }
 
+/* ============================================================ HELPERS — FILTER TABLE */
+function filterTable(inputId, tableId) {
+  const input = document.getElementById(inputId);
+  if (!input) return;
+  input.addEventListener('keyup', () => {
+    filtrarTurmasAux();
+  });
+  
+  // Também vincula o filtro de modalidade se existir
+  const filterMod = document.getElementById('filtro-modalidade');
+  if (filterMod) {
+    filterMod.addEventListener('change', () => {
+      filtrarTurmasAux();
+    });
+  }
+
+  // Aplica filtro inicial ao abrir a página
+  filtrarTurmasAux();
+}
+
+function filtrarTurmasAux() {
+  const searchInput = document.getElementById('busca-turmas');
+  const filterMod = document.getElementById('filtro-modalidade');
+  const grid = document.getElementById('grid-turmas-cards');
+  
+  if (!grid) return;
+  
+  const searchText = (searchInput?.value || '').toLowerCase();
+  const modalidade = (filterMod?.value || '').toLowerCase();
+  
+  const cards = grid.querySelectorAll('.card');
+  cards.forEach(card => {
+    const text = card.textContent.toLowerCase();
+    const okSearch = !searchText || text.includes(searchText);
+    const okModalidade = !modalidade || text.includes(modalidade);
+    card.style.display = (okSearch && okModalidade) ? '' : 'none';
+  });
+}
+
 /* ============================================================ DASHBOARD */
 async function carregarDashboard() {
   await _carregarCaches();
@@ -181,6 +220,7 @@ async function carregarDashboard() {
    ALUNOS — com filtros e ícone de olho
    ============================================================ */
 window._todosAlunos = [];
+window._alunosPorTurmaPorFiltro = {}; /* Cache para filtro de turma */
 
 async function carregarAlunos() {
   await _carregarCaches();
@@ -196,13 +236,24 @@ async function carregarAlunos() {
   renderizarAlunos(window._todosAlunos);
 }
 
-function filtrarAlunos() {
+async function filtrarAlunos() {
   const busca   = (document.getElementById('busca-alunos')?.value || '').toLowerCase();
   const status  = document.getElementById('filtro-status')?.value  || '';
   const turmaId = document.getElementById('filtro-turma')?.value   || '';
 
-  const filtrados = window._todosAlunos.filter(a => {
-    const textoAluno = `${a.nome} ${_nomeTurma(a.id_turma)} ${_nomeProfessor(a.id_professor)}`.toLowerCase();
+  let filtrados;
+
+  /* ⚡ Se filtro por turma está ativo, usa a nova API many-to-many */
+  if (turmaId) {
+    const alunosDaTurma = await GET(`/aluno-turma?turma=${turmaId}`) || [];
+    filtrados = alunosDaTurma;
+  } else {
+    filtrados = window._todosAlunos;
+  }
+
+  /* Aplica outros filtros */
+  filtrados = filtrados.filter(a => {
+    const textoAluno = `${a.nome} ${_nomeProfessor(a.id_professor)}`.toLowerCase();
     const okBusca  = !busca   || textoAluno.includes(busca);
     const statusAluno = String(a.status ?? '').toLowerCase();
     const statusFiltro = status.toLowerCase();
@@ -211,8 +262,7 @@ function filtrarAlunos() {
       (statusFiltro === 'inativo' && String(a.status) === '0') ||
       (statusFiltro === 'ativo' && String(a.status) === '1') ||
       (statusFiltro === 'pendente' && String(a.status) === '2');
-    const okTurma  = !turmaId || String(a.id_turma) === turmaId;
-    return okBusca && okStatus && okTurma;
+    return okBusca && okStatus;
   });
 
   renderizarAlunos(filtrados);
@@ -526,7 +576,9 @@ async function excluirProfessor(id) {
 /* ============================================================ TURMAS */
 async function carregarTurmas() {
   await _carregarCaches();
-  const turmas = window._cacheTurmas;
+  const turmas = [...window._cacheTurmas].sort((a, b) =>
+    (a.nome || '').localeCompare((b.nome || ''), 'pt-BR', { sensitivity: 'base' })
+  );
   const tbody = document.getElementById('lista-turmas');
   if (tbody) {
     if (!turmas.length) { _vazio('lista-turmas', 9, 'Nenhuma turma cadastrada.'); }
@@ -589,6 +641,9 @@ async function carregarTurmas() {
       }).join('');
     }
   }
+
+  // Reaplica os filtros das cards após recarregar os dados
+  filtrarTurmasAux();
 }
 
 function abrirModalNovaTurma() {
@@ -652,7 +707,10 @@ async function verAlunosTurma(idTurma, nomeTurma) {
   const tbody  = document.getElementById('lista-alunos-turma');
   const titulo = document.getElementById('modal-ver-turma-titulo');
   if (titulo) titulo.textContent = `👥 Alunos — ${nomeTurma}`;
-  const alunos = (window._cacheAlunos || []).filter(a => a.id_turma === idTurma);
+  
+  /* ⚡ Usa a nova API many-to-many para carregar alunos da turma */
+  const alunos = await GET(`/aluno-turma?turma=${idTurma}`) || [];
+  
   if (tbody) {
     if (!alunos.length) { _vazio(tbody, 5, 'Nenhum aluno nesta turma'); }
     else {
@@ -923,9 +981,8 @@ async function excluirFicha(id) {
 async function carregarControle() {
   await _carregarCaches();
   const turmas = window._cacheTurmas;
-  const alunos = window._cacheAlunos;
 
-  _popularSelect(document.getElementById('vincular-aluno'), alunos, 'id',
+  _popularSelect(document.getElementById('vincular-aluno'), window._cacheAlunos, 'id',
     a => `${a.nome} (#${String(a.id).padStart(3,'0')})`, 'Selecione o aluno...');
   _popularSelect(document.getElementById('vincular-turma'), turmas, 'id',
     t => `${t.nome} (${t.total_alunos}/${t.capacidade_max} vagas) ${t.ocupacao_pct>=80?'⚠️':''}`,
@@ -944,7 +1001,9 @@ async function carregarControle() {
   if (!turmas.length) { grid.innerHTML = '<div style="color:var(--gray-500);font-size:13px;padding:8px">Nenhuma turma cadastrada.</div>'; return; }
 
   grid.innerHTML = turmas.map(t => {
-    const alunosTurma = alunos.filter(a => a.id_turma === t.id);
+    /* ⚡ Usa a nova API many-to-many para carregar alunos da turma */
+    const alunosTurmaSync = (window._alunosPorTurma || {})[t.id] || [];
+    
     const barColor = t.ocupacao_pct >= 80 ? 'var(--warning)' : 'var(--blue-500)';
     const badgeVagas = t.ocupacao_pct >= 80
       ? `<span class="badge badge-warning">${t.total_alunos} / ${t.capacidade_max} ⚠️</span>`
@@ -957,6 +1016,7 @@ async function carregarControle() {
             <div style="font-size:12px;color:var(--gray-500);margin-top:3px">${_nomeProfessor(t.id_professor)} · ${t.horario}</div>
           </div>
           <div style="text-align:right">
+            <button class="btn btn-danger btn-sm btn-icon" onclick="excluirTurmaControle(${t.id})" title="Excluir turma" style="margin-bottom:6px">🗑️</button>
             ${badgeVagas}
             <div style="background:var(--gray-200);border-radius:99px;height:5px;margin-top:6px;width:80px">
               <div style="background:${barColor};border-radius:99px;height:5px;width:${t.ocupacao_pct}%"></div>
@@ -967,21 +1027,74 @@ async function carregarControle() {
           <table>
             <thead><tr><th>Aluno</th><th>Matrícula</th><th>Status</th><th></th></tr></thead>
             <tbody>
-              ${!alunosTurma.length
+              ${!alunosTurmaSync.length
                 ? `<tr><td colspan="4" style="text-align:center;color:var(--gray-500);padding:16px">Nenhum aluno nesta turma</td></tr>`
-                : alunosTurma.slice(0,4).map(a => `
+                : alunosTurmaSync.slice(0,4).map(a => `
                   <tr>
                     <td>${a.nome}</td>
                     <td>${a.data_matricula}</td>
                     <td>${_badge(a.status)}</td>
-                    <td><button class="btn btn-danger btn-sm btn-icon" onclick="desvincularAluno(${a.id})" title="Remover da turma">✕</button></td>
+                    <td><button class="btn btn-danger btn-sm btn-icon" onclick="desvincularAluno(${a.id},${t.id})" title="Remover da turma">✕</button></td>
                   </tr>`).join('')}
-              ${alunosTurma.length > 4 ? `<tr><td colspan="4" style="text-align:center;color:var(--gray-500);font-size:12.5px;padding:10px">+ ${alunosTurma.length-4} aluno(s)</td></tr>` : ''}
+              ${alunosTurmaSync.length > 4 ? `<tr><td colspan="4" style="text-align:center;color:var(--gray-500);font-size:12.5px;padding:10px">+ ${alunosTurmaSync.length-4} aluno(s)</td></tr>` : ''}
             </tbody>
           </table>
         </div>
       </div>`;
   }).join('');
+
+  /* ⚡ Carrega alunos de cada turma usando a nova API many-to-many (async) */
+  window._alunosPorTurma = {};
+  for (const t of turmas) {
+    const alunosData = await GET(`/aluno-turma?turma=${t.id}`);
+    if (alunosData && Array.isArray(alunosData)) {
+      window._alunosPorTurma[t.id] = alunosData;
+    }
+  }
+  
+  /* Re-renderiza o grid com dados reais */
+  if (grid) {
+    grid.innerHTML = turmas.map(t => {
+      const alunosTurma = window._alunosPorTurma[t.id] || [];
+      const barColor = t.ocupacao_pct >= 80 ? 'var(--warning)' : 'var(--blue-500)';
+      const badgeVagas = t.ocupacao_pct >= 80
+        ? `<span class="badge badge-warning">${t.total_alunos} / ${t.capacidade_max} ⚠️</span>`
+        : `<span class="badge badge-blue">${t.total_alunos} / ${t.capacidade_max}</span>`;
+      return `
+        <div class="card">
+          <div class="card-header">
+            <div>
+              <div class="card-title">${t.nome}</div>
+              <div style="font-size:12px;color:var(--gray-500);margin-top:3px">${_nomeProfessor(t.id_professor)} · ${t.horario}</div>
+            </div>
+            <div style="text-align:right">
+              <button class="btn btn-danger btn-sm btn-icon" onclick="excluirTurmaControle(${t.id})" title="Excluir turma" style="margin-bottom:6px">🗑️</button>
+              ${badgeVagas}
+              <div style="background:var(--gray-200);border-radius:99px;height:5px;margin-top:6px;width:80px">
+                <div style="background:${barColor};border-radius:99px;height:5px;width:${t.ocupacao_pct}%"></div>
+              </div>
+            </div>
+          </div>
+          <div class="card-body" style="padding:0">
+            <table>
+              <thead><tr><th>Aluno</th><th>Matrícula</th><th>Status</th><th></th></tr></thead>
+              <tbody>
+                ${!alunosTurma.length
+                  ? `<tr><td colspan="4" style="text-align:center;color:var(--gray-500);padding:16px">Nenhum aluno nesta turma</td></tr>`
+                  : alunosTurma.slice(0,4).map(a => `
+                    <tr>
+                      <td>${a.nome}</td>
+                      <td>${a.data_matricula}</td>
+                      <td>${_badge(a.status)}</td>
+                      <td><button class="btn btn-danger btn-sm btn-icon" onclick="desvincularAluno(${a.id},${t.id})" title="Remover da turma">✕</button></td>
+                    </tr>`).join('')}
+                ${alunosTurma.length > 4 ? `<tr><td colspan="4" style="text-align:center;color:var(--gray-500);font-size:12.5px;padding:10px">+ ${alunosTurma.length-4} aluno(s)</td></tr>` : ''}
+              </tbody>
+            </table>
+          </div>
+        </div>`;
+    }).join('');
+  }
 }
 
 function abrirModalVincular() {
@@ -1009,22 +1122,42 @@ async function vincularAluno() {
   const idAluno = Number(document.getElementById('vincular-aluno')?.value);
   const idTurma = Number(document.getElementById('vincular-turma')?.value);
   if (!idAluno || !idTurma) { showToast('Selecione aluno e turma!', 'danger'); return; }
-  const aluno = await GET(`/alunos?id=${idAluno}`);
-  if (!aluno) return;
-  aluno.id_turma = idTurma;
-  const res = await PUT(`/alunos?id=${idAluno}`, aluno);
-  if (res?.ok) { closeModal('modal-vincular'); showToast('Aluno vinculado!'); await _carregarCaches(); carregarControle(); }
-  else showToast('Erro ao vincular.', 'danger');
+  
+  /* Usa a nova rota de many-to-many */
+  const res = await POST(`/aluno-turma?aluno=${idAluno}&turma=${idTurma}`, {});
+  if (res?.ok) { 
+    closeModal('modal-vincular'); 
+    showToast('Aluno vinculado à turma!'); 
+    await _carregarCaches(); 
+    carregarControle(); 
+  }
+  else showToast(res?.erro || 'Erro ao vincular.', 'danger');
 }
 
-async function desvincularAluno(idAluno) {
+async function desvincularAluno(idAluno, idTurma) {
   if (!confirm('Remover aluno desta turma?')) return;
-  const aluno = await GET(`/alunos?id=${idAluno}`);
-  if (!aluno) return;
-  aluno.id_turma = 0;
-  const res = await PUT(`/alunos?id=${idAluno}`, aluno);
-  if (res?.ok) { showToast('Aluno removido da turma.'); await _carregarCaches(); carregarControle(); }
+  
+  /* Usa a nova rota de many-to-many */
+  const res = await DEL(`/aluno-turma?aluno=${idAluno}&turma=${idTurma}`);
+  if (res?.ok) { 
+    showToast('Aluno removido da turma.'); 
+    await _carregarCaches(); 
+    carregarControle(); 
+  }
   else showToast('Erro ao remover.', 'danger');
+}
+
+async function excluirTurmaControle(idTurma) {
+  if (!confirm('Deseja excluir esta turma?')) return;
+
+  const res = await DEL(`/turmas?id=${idTurma}`);
+  if (res?.ok) {
+    showToast('Turma removida.');
+    await _carregarCaches();
+    carregarControle();
+  } else {
+    showToast(res?.erro || 'Erro ao remover turma.', 'danger');
+  }
 }
 
 /* ============================================================ AGENDA */

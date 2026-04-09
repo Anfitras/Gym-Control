@@ -20,6 +20,7 @@
 #define ARQ_TURMAS      "data/turmas.dat"
 #define ARQ_FICHAS      "data/fichas.dat"
 #define ARQ_AGENDA      "data/agenda.dat"
+#define ARQ_ALUNO_TURMA "data/aluno_turma.dat"
 
 /* ----------------------------------------------------------------
    LIMITES
@@ -106,6 +107,12 @@ typedef struct {
 typedef struct {
     int            id;
     int            id_aluno;
+    int            id_turma;
+} AlunoTurma;
+
+typedef struct {
+    int            id;
+    int            id_aluno;
     int            id_professor;
     ObjetivoTreino objetivo;
     char           data_criacao[12];
@@ -167,6 +174,16 @@ int  turma_excluir(int id);
 int  turma_total(void);
 int  turma_vagas_disponiveis(int id_turma);
 int  turma_ocupacao_percent(int id_turma);
+
+/* ----------------------------------------------------------------
+   PROTÓTIPOS — aluno_turma.c  (relação many-to-many)
+   ---------------------------------------------------------------- */
+int  aluno_turma_vincular(int id_aluno, int id_turma);
+int  aluno_turma_desvincular(int id_aluno, int id_turma);
+int  aluno_turma_listar_turmas_json(int id_aluno, char *buf, int maxlen);
+int  aluno_turma_listar_de_turma_json(int id_turma, char *buf, int maxlen);
+int  aluno_turma_contar_de_turma(int id_turma);
+int  aluno_turma_remover_tudo_aluno(int id_aluno);
 
 /* ----------------------------------------------------------------
    PROTÓTIPOS — fichas.c

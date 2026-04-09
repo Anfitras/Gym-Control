@@ -197,19 +197,20 @@ void route_handle(const char *method, const char *path,
 
         if (strcmp(method, "GET") == 0) {
             if (strlen(sturma) > 0) {
-                aluno_listar_turma_json(atoi(sturma), buf, sizeof(buf));
+                /* Lista alunos de uma turma (usando many-to-many) */
+                aluno_turma_listar_de_turma_json(atoi(sturma), buf, sizeof(buf));
             } else if (strlen(sid) > 0) {
                 Aluno a;
                 if (aluno_buscar_id(atoi(sid), &a) == GC_OK) {
                     snprintf(buf, sizeof(buf),
                         "{\"id\":%d,\"nome\":\"%s\",\"cpf\":\"%s\","
                         "\"idade\":%d,\"sexo\":%d,\"telefone\":\"%s\",\"email\":\"%s\","
-                        "\"id_turma\":%d,\"id_professor\":%d,"
+                        "\"id_turma\":0,\"id_professor\":%d,"
                         "\"status\":\"%s\",\"data_matricula\":\"%s\","
                         "\"peso_kg\":%.1f,\"altura_m\":%.2f}",
                         a.id, a.nome, a.cpf, a.idade, a.sexo,
                         a.telefone, a.email,
-                        a.id_turma, a.id_professor,
+                        a.id_professor,
                         utils_status_str(a.status),
                         a.data_matricula, a.peso_kg, a.altura_m);
                 } else {
@@ -329,6 +330,66 @@ void route_handle(const char *method, const char *path,
         } else if (strcmp(method, "DELETE") == 0) {
             if (strlen(sid) == 0) { http_error(response,400,"id obrigatorio"); return; }
             int r = turma_excluir(atoi(sid));
+            snprintf(buf, sizeof(buf), "{\"ok\":%s}", r==GC_OK?"true":"false");
+            http_ok(response, buf);
+        }
+        return;
+    }
+
+    /* =========================================================
+       /api/aluno-turma  — gerencia relação many-to-many
+       GET  /api/aluno-turma?aluno=N      → turmas do aluno
+       GET  /api/aluno-turma?turma=N      → alunos da turma
+       POST /api/aluno-turma?aluno=N&turma=M  → vincular
+       DELETE /api/aluno-turma?aluno=N&turma=M → desvincular
+       ========================================================= */
+    if (path_starts(path, "/api/aluno-turma")) {
+        char saluno[16]="", sturma[16]="";
+        qs_get(path, "aluno", saluno, sizeof(saluno));
+        qs_get(path, "turma", sturma, sizeof(sturma));
+
+        if (strcmp(method, "GET") == 0) {
+            if (strlen(saluno) > 0 && strlen(sturma) == 0) {
+                /* Lista turmas de um aluno */
+                aluno_turma_listar_turmas_json(atoi(saluno), buf, sizeof(buf));
+            } else if (strlen(sturma) > 0 && strlen(saluno) == 0) {
+                /* Lista alunos de uma turma */
+                aluno_turma_listar_de_turma_json(atoi(sturma), buf, sizeof(buf));
+            } else {
+                http_error(response, 400, "Especifique ?aluno=N ou ?turma=N");
+                return;
+            }
+            http_ok(response, buf);
+
+        } else if (strcmp(method, "POST") == 0) {
+            if (strlen(saluno) == 0 || strlen(sturma) == 0) {
+                http_error(response, 400, "aluno e turma obrigatorios");
+                return;
+            }
+            int id_aluno = atoi(saluno), id_turma = atoi(sturma);
+
+            /* Verifica vagas */
+            Turma t;
+            if (turma_buscar_id(id_turma, &t) != GC_OK) {
+                http_error(response, 404, "Turma nao encontrada");
+                return;
+            }
+            int vagas = turma_vagas_disponiveis(id_turma);
+            if (vagas <= 0) {
+                http_error(response, 409, "Turma sem vagas");
+                return;
+            }
+
+            int r = aluno_turma_vincular(id_aluno, id_turma);
+            snprintf(buf, sizeof(buf), "{\"ok\":%s}", r==GC_OK?"true":"false");
+            http_created(response, buf);
+
+        } else if (strcmp(method, "DELETE") == 0) {
+            if (strlen(saluno) == 0 || strlen(sturma) == 0) {
+                http_error(response, 400, "aluno e turma obrigatorios");
+                return;
+            }
+            int r = aluno_turma_desvincular(atoi(saluno), atoi(sturma));
             snprintf(buf, sizeof(buf), "{\"ok\":%s}", r==GC_OK?"true":"false");
             http_ok(response, buf);
         }

@@ -56,7 +56,7 @@ cd src
 
 gcc -Wall -std=c99 \
   main.c server.c routes.c json_parser.c \
-  utils.c alunos.c professores.c turmas.c fichas.c agenda.c \
+  utils.c alunos.c aluno_turma.c professores.c turmas.c fichas.c agenda.c \
   -o ../gymcontrol
 ```
 
@@ -66,7 +66,7 @@ cd src
 
 gcc -Wall -std=c99 ^
   main.c server.c routes.c json_parser.c ^
-  utils.c alunos.c professores.c turmas.c fichas.c agenda.c ^
+  utils.c alunos.c aluno_turma.c professores.c turmas.c fichas.c agenda.c ^
   -o ../gymcontrol.exe -lws2_32
 ```
 
@@ -121,6 +121,10 @@ O C nunca toca em HTML. O HTML nunca toca nos dados diretamente.
 | POST | /api/turmas | Cadastra |
 | PUT | /api/turmas?id=N | Edita |
 | DELETE | /api/turmas?id=N | Remove |
+| **GET** | **/api/aluno-turma?aluno=N** | **Turmas do aluno** |
+| **GET** | **/api/aluno-turma?turma=N** | **Alunos da turma** |
+| **POST** | **/api/aluno-turma?aluno=N&turma=M** | **Vincular aluno a turma** |
+| **DELETE** | **/api/aluno-turma?aluno=N&turma=M** | **Desvincular** |
 | GET | /api/fichas | Lista todas |
 | GET | /api/fichas?aluno=N | Fichas de um aluno |
 | POST | /api/fichas | Cadastra |
@@ -151,3 +155,51 @@ O C nunca toca em HTML. O HTML nunca toca nos dados diretamente.
                                                     data/*.dat
                                                (arquivos binários)
 ```
+
+---
+
+## 🔗 Relação Many-to-Many: Aluno ↔ Turma
+
+**Novidade:** Um aluno pode estar em **múltiplas turmas** simultaneamente!
+
+### Arquivos de dados
+- `data/alunos.dat` — Dados de alunos (sem id_turma, agora depreciado)
+- `data/turmas.dat` — Dados de turmas
+- **`data/aluno_turma.dat`** — Tabela de junção (many-to-many)
+
+### Como funciona
+```c
+// Struct de junção simples
+typedef struct {
+    int id;         // ID único do vínculo
+    int id_aluno;   // Referência ao aluno
+    int id_turma;   // Referência à turma
+} AlunoTurma;
+```
+
+### Exemplo de uso
+```javascript
+// Vincular um aluno a uma turma
+POST /api/aluno-turma?aluno=5&turma=2
+
+// Buscar todas as turmas de um aluno
+GET /api/aluno-turma?aluno=5
+// Retorna: [{ id:2, nome:"Musculação A", ... }, { id:3, nome:"Funcional", ... }]
+
+// Buscar todos os alunos de uma turma
+GET /api/aluno-turma?turma=2
+// Retorna: [{ id:5, nome:"João", ... }, { id:8, nome:"Maria", ... }]
+
+// Desvincular
+DELETE /api/aluno-turma?aluno=5&turma=2
+```
+
+### Backend (C)
+- **aluno_turma.c** — Funções CRUD para a relação
+  - `aluno_turma_vincular()` — Cria vínculo
+  - `aluno_turma_desvincular()` — Remove vínculo
+  - `aluno_turma_listar_turmas_json()` — Turmas de um aluno
+  - `aluno_turma_listar_de_turma_json()` — Alunos de uma turma
+  - `aluno_turma_contar_de_turma()` — Conta alunos ativos em turma (para vagas)
+
+---

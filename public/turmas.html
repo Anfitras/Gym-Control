@@ -35,7 +35,7 @@
           <span class="search-icon">🔍</span>
           <input type="text" id="busca-turmas" placeholder="Buscar turma..." />
         </div>
-        <select class="form-control" style="max-width:180px">
+        <select id="filtro-modalidade" class="form-control" style="max-width:180px">
           <option value="">Todas as modalidades</option>
           <option>Musculação</option>
           <option>Funcional</option>
@@ -184,10 +184,12 @@
 
 <script src="gymcontrol.js"></script>
 <script>
-  buildSidebar('turmas');
-  buildTopbar('Turmas');
-  carregarTurmas();
-  filterTable('busca-turmas', 'tabela-turmas');
+  (async () => {
+    buildSidebar('turmas');
+    buildTopbar('Turmas');
+    await carregarTurmas();
+    filterTable('busca-turmas', 'tabela-turmas');
+  })();
 </script>
 </body>
 </html>

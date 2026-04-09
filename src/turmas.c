@@ -3,33 +3,9 @@
    ================================================================ */
 #include "gymcontrol.h"
 
-/* Calcula alunos ativos nessa turma cruzando com alunos.dat */
+/* Calcula alunos ativos nessa turma usando aluno_turma (many-to-many) */
 static int contar_alunos_turma(int id_turma) {
-    FILE *fp = fopen(ARQ_ALUNOS, "rb");
-    if (!fp) return 0;
-    /* importa struct Aluno inline lendo só os campos necessários */
-    /* Lemos o registro completo da struct real */
-    typedef struct {
-        int            id;
-        char           nome[100];
-        char           cpf[20];
-        int            idade;
-        int            sexo;
-        char           telefone[20];
-        char           email[100];
-        int            id_turma;
-        int            id_professor;
-        int            status;
-        char           data_matricula[12];
-        float          peso_kg;
-        float          altura_m;
-    } AlunoFull;
-
-    AlunoFull a; int count = 0;
-    while (fread(&a, sizeof(AlunoFull), 1, fp) == 1)
-        if (a.id_turma == id_turma && a.status != 0) count++;
-    fclose(fp);
-    return count;
+    return aluno_turma_contar_de_turma(id_turma);
 }
 
 int turma_vagas_disponiveis(int id_turma) {
